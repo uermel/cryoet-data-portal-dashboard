@@ -14,3 +14,4 @@ panel serve src/cryoet_data_portal_dashboard/app.py --global-loading-spinner
 
 ## Example 
 
+<img width="1511" alt="Example" src="https://github.com/user-attachments/assets/014684c4-5805-49db-a461-2c8913d21e0d">
