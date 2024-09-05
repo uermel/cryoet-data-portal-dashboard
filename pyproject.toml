@@ -32,8 +32,8 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["cryoet", "cryo-et", "tomography", "annotation", "segmentation"]
 
-#[project.scripts]
-#make_templates = "copick.cli.make_templates:create [docs]"
+[project.scripts]
+generate_panel = "cryoet_data_portal_dashboard.generate:generate"
 
 #[tool.hatch.version]
 #source = "copick/__init__.py"

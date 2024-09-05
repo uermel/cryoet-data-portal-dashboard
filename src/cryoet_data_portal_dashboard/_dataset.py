@@ -5,7 +5,7 @@ import panel as pn
 from cryoet_data_portal import Client, Dataset
 from dateutil.relativedelta import relativedelta as rd
 
-from cryoet_data_portal_dashboard.util import month_range, table_bar, table_plot
+from cryoet_data_portal_dashboard.util import month_range  # , table_bar, table_plot
 
 
 @pn.cache(policy="LRU")
@@ -47,13 +47,31 @@ def datasets_per_month():
         dates.append(date + rd(days=15))
         nums.append(len(get_datasets_by_date(start=date.date(), end=date.date() + rd(months=1))))
 
-    return table_plot(
-        dates,
-        nums,
-        "Datasets per Month",
-        "Date",
-        "Number of new Datasets",
-    )
+    with open("data/datasets_per_month.csv", "w") as f:
+        f.write("date,num\n")
+        for date, num in zip(dates, nums):
+            f.write(f"{date},{num}\n")
+
+
+# def datasets_per_month():
+#     """Get number of datasets per month."""
+#     # Get client instance
+#     daterange = month_range()
+#
+#     dates = []
+#     nums = []
+#
+#     for date in daterange:
+#         dates.append(date + rd(days=15))
+#         nums.append(len(get_datasets_by_date(start=date.date(), end=date.date() + rd(months=1))))
+#
+#     return table_plot(
+#         dates,
+#         nums,
+#         "Datasets per Month",
+#         "Date",
+#         "Number of new Datasets",
+#     )
 
 
 def cumulative_datasets_per_month():
