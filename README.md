@@ -2,6 +2,9 @@
 
 A web dashboard built with Dash Plotly that provides visualizations and statistics about the cryoET data portal.
 
+<img width="1493" alt="image" src="https://github.com/user-attachments/assets/d5d95eb1-a4c6-44a2-b544-4798459eca4f" />
+
+
 ## Features
 
 - Interactive dashboard with multiple pages for different categories:
