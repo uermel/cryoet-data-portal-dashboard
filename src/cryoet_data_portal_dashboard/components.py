@@ -397,15 +397,15 @@ def create_related_items_links(items, item_type):
     
     # Base paths for each item type
     base_paths = {
-        'deposition': '/deposition/',
-        'dataset': '/dataset/',
-        'run': '/run/',
-        'tomogram': '/tomogram/',
-        'annotation': '/annotation/'
+        'deposition': '/depositions/',
+        'dataset': '/datasets/',
+        'run': '/runs/',
+        'tomogram': '/tomograms/',
+        'annotation': '/annotations/'
     }
     
-    # Get the correct base path or default to deposition
-    base_path = base_paths.get(item_type.lower(), '/deposition/')
+    # Get the correct base path or default to depositions
+    base_path = base_paths.get(item_type.lower(), '/depositions/')
     
     # Format human-readable names based on item_type and available fields
     def get_display_name(item):
