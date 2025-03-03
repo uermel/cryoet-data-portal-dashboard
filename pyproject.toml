@@ -12,17 +12,14 @@ classifiers = [
 #dynamic = ["version"]
 version = "0.1"
 dependencies = [
-    'altair',
-    'hvplot',
     'matplotlib',
     'numpy',
     'pandas',
-    'panel',
+    'dash',
     'plotly',
-    'scipy',
-    'watchfiles',
-    'cryoet-data-portal',
-    'cryoet-data-portal-dashboard',
+    'dash-bootstrap-components',
+    'cryoet-data-portal>=4.3.1',
+    'Flask-Caching>=2.0.0',
 ]
 authors = [
   {name = "Utz H. Ermel", email = "utz.ermel@czii.org"},
@@ -32,8 +29,8 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["cryoet", "cryo-et", "tomography", "annotation", "segmentation"]
 
-#[project.scripts]
-#make_templates = "copick.cli.make_templates:create [docs]"
+[project.scripts]
+app = "cryoet_data_portal_dashboard.app:main"
 
 #[tool.hatch.version]
 #source = "copick/__init__.py"
