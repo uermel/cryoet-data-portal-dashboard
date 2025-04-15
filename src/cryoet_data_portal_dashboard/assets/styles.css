@@ -17,7 +17,6 @@
     white-space: nowrap;
     /* Much slower animation (300s = 5 minutes) */
     animation: scrollLeft 300s linear infinite;
-    /* Add a 2 second delay before animation starts */
     animation-delay: 2s;
     padding: 15px 0;
 }

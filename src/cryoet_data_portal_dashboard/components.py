@@ -160,9 +160,47 @@ def create_date_range_selector(id_prefix):
 
 def filter_by_date_range(df, date_column, start_date, end_date):
     """Filter DataFrame by date range."""
-    if start_date and end_date:
-        df = df[(df[date_column] >= start_date) & (df[date_column] <= end_date)]
-    return df
+    # Create a copy to avoid modifying the original
+    filtered_df = df.copy()
+    
+    # Skip filtering if no date range is provided
+    if not start_date or not end_date:
+        return filtered_df
+    
+    # Ensure the date column is datetime type
+    if not pd.api.types.is_datetime64_any_dtype(filtered_df[date_column]):
+        filtered_df[date_column] = pd.to_datetime(filtered_df[date_column])
+    
+    # Check if the datetime column has timezone info
+    has_tz = pd.api.types.is_datetime64tz_dtype(filtered_df[date_column])
+    
+    # Convert string dates to datetime if needed
+    if isinstance(start_date, str):
+        start_date = pd.to_datetime(start_date)
+    
+    if isinstance(end_date, str):
+        end_date = pd.to_datetime(end_date)
+    
+    # Handle timezone-aware vs timezone-naive comparison
+    if has_tz:
+        # If data has timezone but inputs don't, make inputs timezone-aware
+        if start_date.tzinfo is None:
+            # Use UTC as that's likely what the API uses
+            start_date = pd.Timestamp(start_date).tz_localize('UTC')
+        if end_date.tzinfo is None:
+            end_date = pd.Timestamp(end_date).tz_localize('UTC')
+    else:
+        # If data doesn't have timezone but inputs do, make data timezone-aware
+        # or make inputs timezone-naive
+        if start_date.tzinfo is not None:
+            start_date = start_date.tz_localize(None)
+        if end_date.tzinfo is not None:
+            end_date = end_date.tz_localize(None)
+    
+    # Apply filtering
+    filtered_df = filtered_df[(filtered_df[date_column] >= start_date) & (filtered_df[date_column] <= end_date)]
+    
+    return filtered_df
 
 
 def group_by_interval(df, date_column, interval, agg_column=None, agg_func='count'):
@@ -177,6 +215,45 @@ def group_by_interval(df, date_column, interval, agg_column=None, agg_func='coun
     if not pd.api.types.is_datetime64_any_dtype(df_copy[date_column]):
         df_copy[date_column] = pd.to_datetime(df_copy[date_column])
     
+    # Get min and max dates from the data
+    min_date = df_copy[date_column].min() if not df_copy.empty else None
+    max_date = df_copy[date_column].max() if not df_copy.empty else None
+    
+    # Get current date to ensure we include all dates up to current date
+    current_date = pd.Timestamp.now()
+    
+    # If there's no data, use a default range
+    if min_date is None or pd.isna(min_date):
+        min_date = pd.Timestamp('2023-01-01')
+        max_date = current_date
+    else:
+        # Make sure max_date includes the current date
+        # Check if the dates have timezone info
+        has_tz = pd.api.types.is_datetime64tz_dtype(df_copy[date_column])
+        
+        if has_tz:
+            # If data has timezone, make current_date timezone-aware
+            if current_date.tzinfo is None:
+                current_date = current_date.tz_localize('UTC')
+        else:
+            # If data doesn't have timezone but current_date does, make current_date timezone-naive
+            if current_date.tzinfo is not None:
+                current_date = current_date.tz_localize(None)
+                
+        max_date = max(max_date, current_date)
+    
+    # Create a date range DataFrame with all intervals between min and max date
+    try:
+        date_range = pd.DataFrame({
+            date_column: pd.date_range(start=min_date, end=max_date, freq=interval)
+        })
+    except Exception as e:
+        # Handle case where the date range creation fails
+        logger.error(f"Error creating date range: {e}. Using simple range instead.")
+        # Create a simple range from min to max with monthly frequency
+        simple_range = pd.date_range(start=min_date, end=max_date, freq='ME')
+        date_range = pd.DataFrame({date_column: simple_range})
+    
     # Group by the specified interval
     if agg_column is None:
         # Just count occurrences
@@ -186,17 +263,50 @@ def group_by_interval(df, date_column, interval, agg_column=None, agg_func='coun
         # Apply the specified aggregation function
         result = df_copy.groupby(pd.Grouper(key=date_column, freq=interval)).agg({agg_column: agg_func}).reset_index()
     
-    # Remove time component from dates
-    result[date_column] = result[date_column].dt.date
+    # Get the timezone info from the result
+    result_has_tz = False
+    if not result.empty and pd.api.types.is_datetime64tz_dtype(result[date_column]):
+        result_has_tz = True
     
-    return result
+    # Ensure the date_range has the same timezone as the result
+    if result_has_tz and not pd.api.types.is_datetime64tz_dtype(date_range[date_column]):
+        date_range[date_column] = date_range[date_column].dt.tz_localize('UTC')
+    elif not result_has_tz and pd.api.types.is_datetime64tz_dtype(date_range[date_column]):
+        date_range[date_column] = date_range[date_column].dt.tz_localize(None)
+    
+    # Merge with the complete date range to ensure all dates are present
+    # Use outer join and fill NaN with 0
+    complete_result = pd.merge(
+        date_range, 
+        result, 
+        on=date_column, 
+        how='left'
+    )
+    
+    # Fill missing count values with 0
+    if agg_column is None:
+        complete_result['count'] = complete_result['count'].fillna(0).astype(int)
+    else:
+        complete_result[agg_column] = complete_result[agg_column].fillna(0)
+    
+    # Remove time component from dates
+    complete_result[date_column] = complete_result[date_column].dt.date
+    
+    return complete_result
 
 
 def calculate_cumulative(df, date_column, count_column='count'):
     """Calculate cumulative sum of count column."""
-    df = df.sort_values(by=date_column)
-    df['cumulative'] = df[count_column].cumsum()
-    return df
+    # Create a copy to avoid modifying the original
+    df_copy = df.copy()
+    
+    # Sort by date
+    df_copy = df_copy.sort_values(by=date_column)
+    
+    # Calculate cumulative sum
+    df_copy['cumulative'] = df_copy[count_column].cumsum()
+    
+    return df_copy
 
 
 def create_line_chart(df, x_column, y_column, title, color=None, labels=None):
