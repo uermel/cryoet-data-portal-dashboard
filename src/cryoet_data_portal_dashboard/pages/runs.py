@@ -17,7 +17,8 @@ from cryoet_data_portal_dashboard.components import (
     create_line_chart,
     create_bar_chart,
     create_auto_scrolling_image_gallery,
-    create_related_items_grid_gallery
+    create_related_items_grid_gallery,
+    generate_csv_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_runs_with_dataset_dates,
@@ -1369,3 +1370,93 @@ def display_runs_with_annotations_related_items(active_cell, data):
     
     # Return the gallery and set is_open to True
     return gallery, True 
+
+# Callbacks for CSV downloads
+@callback(
+    Output("runs-added-download-csv", "data"),
+    Input("runs-added-download-button", "n_clicks"),
+    State("runs-added-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_runs_added_csv(n_clicks, data):
+    """Download the runs added table data as CSV"""
+    if n_clicks is None or not data:
+        return dash.no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "runs_added")
+
+
+@callback(
+    Output("runs-cumulative-download-csv", "data"),
+    Input("runs-cumulative-download-button", "n_clicks"),
+    State("runs-cumulative-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_runs_cumulative_csv(n_clicks, data):
+    """Download the cumulative runs table data as CSV"""
+    if n_clicks is None or not data:
+        return dash.no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "runs_cumulative")
+
+
+@callback(
+    Output("runs-sample-type-download-csv", "data"),
+    Input("runs-sample-type-download-button", "n_clicks"),
+    State("runs-sample-type-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_runs_sample_type_csv(n_clicks, data):
+    """Download the runs by sample type table data as CSV"""
+    if n_clicks is None or not data:
+        return dash.no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "runs_by_sample_type")
+
+
+@callback(
+    Output("runs-organism-download-csv", "data"),
+    Input("runs-organism-download-button", "n_clicks"),
+    State("runs-organism-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_runs_organism_csv(n_clicks, data):
+    """Download the runs by organism table data as CSV"""
+    if n_clicks is None or not data:
+        return dash.no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "runs_by_organism")
+
+
+@callback(
+    Output("runs-with-annotations-download-csv", "data"),
+    Input("runs-with-annotations-download-button", "n_clicks"),
+    State("runs-with-annotations-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_runs_with_annotations_csv(n_clicks, data):
+    """Download the runs with annotations table data as CSV"""
+    if n_clicks is None or not data:
+        return dash.no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "runs_with_annotations") 

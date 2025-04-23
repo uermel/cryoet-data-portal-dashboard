@@ -1,6 +1,6 @@
 """Datasets page for the dashboard."""
 import pandas as pd
-from dash import dcc, html, callback, Output, Input, dash_table, no_update
+from dash import dcc, html, callback, Output, Input, State, dash_table, no_update
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from datetime import datetime
@@ -15,7 +15,8 @@ from cryoet_data_portal_dashboard.components import (
     create_line_chart,
     create_bar_chart,
     create_auto_scrolling_image_gallery,
-    create_related_items_links
+    create_related_items_links,
+    generate_csv_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_datasets,
@@ -754,4 +755,77 @@ def display_datasets_organism_related_items(active_cell, data):
     
     except Exception as e:
         logger.error(f"Error in display_datasets_organism_related_items: {str(e)}")
-        return html.P(f"An error occurred: {str(e)}"), True 
+        return html.P(f"An error occurred: {str(e)}"), True
+
+
+# Callbacks for CSV downloads
+@callback(
+    Output("datasets-added-download-csv", "data"),
+    Input("datasets-added-download-button", "n_clicks"),
+    State("datasets-added-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_datasets_added_csv(n_clicks, data):
+    """Download the datasets added table data as CSV"""
+    if n_clicks is None or not data:
+        return no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "datasets_added")
+
+
+@callback(
+    Output("datasets-cumulative-download-csv", "data"),
+    Input("datasets-cumulative-download-button", "n_clicks"),
+    State("datasets-cumulative-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_datasets_cumulative_csv(n_clicks, data):
+    """Download the cumulative datasets table data as CSV"""
+    if n_clicks is None or not data:
+        return no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "datasets_cumulative")
+
+
+@callback(
+    Output("datasets-sample-type-download-csv", "data"),
+    Input("datasets-sample-type-download-button", "n_clicks"),
+    State("datasets-sample-type-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_datasets_sample_type_csv(n_clicks, data):
+    """Download the datasets by sample type table data as CSV"""
+    if n_clicks is None or not data:
+        return no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "datasets_by_sample_type")
+
+
+@callback(
+    Output("datasets-organism-download-csv", "data"),
+    Input("datasets-organism-download-button", "n_clicks"),
+    State("datasets-organism-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_datasets_organism_csv(n_clicks, data):
+    """Download the datasets by organism table data as CSV"""
+    if n_clicks is None or not data:
+        return no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "datasets_by_organism") 
