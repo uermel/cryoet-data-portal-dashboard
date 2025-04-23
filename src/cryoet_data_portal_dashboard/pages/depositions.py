@@ -1,10 +1,11 @@
 """Depositions page for the dashboard."""
 import pandas as pd
-from dash import dcc, html, callback, Output, Input, dash_table, no_update
+from dash import dcc, html, callback, Output, Input, State, dash_table, no_update, ctx
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from datetime import datetime
 import logging
+import os
 
 from cryoet_data_portal_dashboard.components import (
     create_card, 
@@ -15,7 +16,9 @@ from cryoet_data_portal_dashboard.components import (
     create_line_chart,
     create_bar_chart,
     create_auto_scrolling_image_gallery,
-    create_related_items_links
+    create_related_items_links,
+    generate_csv_download,
+    generate_svg_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_depositions, 
@@ -415,3 +418,74 @@ def refresh_deposition_images(n_clicks):
     logger.info(f"Total cards after duplication: {len(all_cards)}")
     
     return all_cards 
+
+
+# Callbacks for CSV downloads
+@callback(
+    Output("depositions-added-download-csv", "data"),
+    Input("depositions-added-download-button", "n_clicks"),
+    State("depositions-added-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_depositions_added_csv(n_clicks, data):
+    """Download the depositions added table data as CSV"""
+    if n_clicks is None or not data:
+        return no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "depositions_added")
+
+
+@callback(
+    Output("depositions-cumulative-download-csv", "data"),
+    Input("depositions-cumulative-download-button", "n_clicks"),
+    State("depositions-cumulative-datatable", "data"),
+    prevent_initial_call=True,
+)
+def download_depositions_cumulative_csv(n_clicks, data):
+    """Download the cumulative depositions table data as CSV"""
+    if n_clicks is None or not data:
+        return no_update
+    
+    # Convert table data to dataframe
+    df = pd.DataFrame(data)
+    
+    # Generate CSV download with appropriate filename
+    return generate_csv_download(df, "depositions_cumulative")
+
+
+# Callbacks for SVG downloads
+@callback(
+    Output(f"depositions-added-download-svg", "data"),
+    Input("depositions-added-download-svg-button", "n_clicks"),
+    State("depositions-added-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_depositions_added_svg(n_clicks, figure):
+    """Download the depositions added chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Convert the figure dict to a Figure object
+    import plotly.io as pio
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "depositions_added")
+
+
+@callback(
+    Output(f"depositions-cumulative-download-svg", "data"),
+    Input("depositions-cumulative-download-svg-button", "n_clicks"),
+    State("depositions-cumulative-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_depositions_cumulative_svg(n_clicks, figure):
+    """Download the cumulative depositions chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download directly from the figure dict
+    return generate_svg_download(figure, "depositions_cumulative") 
