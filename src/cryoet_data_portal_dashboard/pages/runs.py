@@ -1,12 +1,13 @@
 """Runs page for the dashboard."""
 import pandas as pd
 import dash
-from dash import dcc, html, callback, Output, Input, dash_table, State
+from dash import dcc, html, callback, Output, Input, dash_table, State, no_update
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from datetime import datetime
 import logging
 import random
+import os
 
 from cryoet_data_portal_dashboard.components import (
     create_card, 
@@ -18,7 +19,8 @@ from cryoet_data_portal_dashboard.components import (
     create_bar_chart,
     create_auto_scrolling_image_gallery,
     create_related_items_grid_gallery,
-    generate_csv_download
+    generate_csv_download,
+    generate_svg_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_runs_with_dataset_dates,
@@ -304,6 +306,7 @@ def update_runs_by_organism(pathname, n_clicks):
         data=df.to_dict('records'),
         columns=[
             {"name": "Organism", "id": "organism_name"},
+            {"name": "Taxonomy ID", "id": "organism_taxid"},
             {"name": "Count", "id": "count"}
         ],
         style_table={'overflowX': 'auto'},
@@ -801,8 +804,9 @@ def display_runs_organism_related_items(active_cell, data):
         # Get the selected row data
         selected_row = data[row_idx]
         organism = selected_row.get('organism_name', '')
+        organism_taxid = selected_row.get('organism_taxid', '')
         
-        logger.info(f"Runs Organism - Selected organism: {organism}")
+        logger.info(f"Runs Organism - Selected organism: {organism}, Taxonomy ID: {organism_taxid}")
         
         if not organism:
             return html.P("No organism selected"), True
@@ -813,10 +817,14 @@ def display_runs_organism_related_items(active_cell, data):
         if all_runs.empty or 'organism_name' not in all_runs.columns:
             return html.P("No run data available with organism information"), True
         
-        # Filter runs for the selected organism
-        related_runs = all_runs[all_runs['organism_name'] == organism]
+        # Filter runs for the selected organism and taxonomy ID
+        if organism_taxid and 'organism_taxid' in all_runs.columns:
+            related_runs = all_runs[(all_runs['organism_name'] == organism) & (all_runs['organism_taxid'] == organism_taxid)]
+        else:
+            # Fall back to filtering by organism name only if taxonomy ID is missing
+            related_runs = all_runs[all_runs['organism_name'] == organism]
         
-        logger.info(f"Runs Organism - Found {len(related_runs)} related runs for {organism}")
+        logger.info(f"Runs Organism - Found {len(related_runs)} related runs for {organism} (Taxonomy ID: {organism_taxid})")
         
         # Now get tomogram images to add to runs
         tomograms_df = fetch_tomograms()
@@ -852,7 +860,7 @@ def display_runs_organism_related_items(active_cell, data):
             return html.P(f"No runs found for organism: {organism}"), True
         
         # Create the grid gallery of related runs
-        gallery = create_related_items_grid_gallery(related_items, 'run', f"Runs with organism: {organism}")
+        gallery = create_related_items_grid_gallery(related_items, 'run', f"Runs with organism: {organism} (Taxonomy ID: {organism_taxid})")
         
         # Return the gallery and set is_open to True
         return gallery, True
@@ -1459,4 +1467,79 @@ def download_runs_with_annotations_csv(n_clicks, data):
     df = pd.DataFrame(data)
     
     # Generate CSV download with appropriate filename
-    return generate_csv_download(df, "runs_with_annotations") 
+    return generate_csv_download(df, "runs_with_annotations")
+
+# Callbacks for SVG downloads
+@callback(
+    Output(f"runs-added-download-svg", "data"),
+    Input("runs-added-download-svg-button", "n_clicks"),
+    State("runs-added-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_runs_added_svg(n_clicks, figure):
+    """Download the runs added chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "runs_added")
+
+
+@callback(
+    Output(f"runs-cumulative-download-svg", "data"),
+    Input("runs-cumulative-download-svg-button", "n_clicks"),
+    State("runs-cumulative-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_runs_cumulative_svg(n_clicks, figure):
+    """Download the cumulative runs chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "runs_cumulative")
+
+
+@callback(
+    Output(f"runs-sample-type-download-svg", "data"),
+    Input("runs-sample-type-download-svg-button", "n_clicks"),
+    State("runs-sample-type-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_runs_sample_type_svg(n_clicks, figure):
+    """Download the runs by sample type chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "runs_by_sample_type")
+
+
+@callback(
+    Output(f"runs-organism-download-svg", "data"),
+    Input("runs-organism-download-svg-button", "n_clicks"),
+    State("runs-organism-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_runs_organism_svg(n_clicks, figure):
+    """Download the runs by organism chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "runs_by_organism")
+
+
+@callback(
+    Output(f"runs-with-annotations-download-svg", "data"),
+    Input("runs-with-annotations-download-svg-button", "n_clicks"),
+    State("runs-with-annotations-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_runs_with_annotations_svg(n_clicks, figure):
+    """Download the runs with annotations chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "runs_with_annotations") 

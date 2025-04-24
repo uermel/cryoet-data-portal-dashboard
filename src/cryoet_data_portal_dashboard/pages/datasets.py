@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from datetime import datetime
 import logging
+import os
 
 from cryoet_data_portal_dashboard.components import (
     create_card, 
@@ -16,7 +17,8 @@ from cryoet_data_portal_dashboard.components import (
     create_bar_chart,
     create_auto_scrolling_image_gallery,
     create_related_items_links,
-    generate_csv_download
+    generate_csv_download,
+    generate_svg_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_datasets,
@@ -828,4 +830,65 @@ def download_datasets_organism_csv(n_clicks, data):
     df = pd.DataFrame(data)
     
     # Generate CSV download with appropriate filename
-    return generate_csv_download(df, "datasets_by_organism") 
+    return generate_csv_download(df, "datasets_by_organism")
+
+
+# Callbacks for SVG downloads
+@callback(
+    Output(f"datasets-added-download-svg", "data"),
+    Input("datasets-added-download-svg-button", "n_clicks"),
+    State("datasets-added-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_datasets_added_svg(n_clicks, figure):
+    """Download the datasets added chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "datasets_added")
+
+
+@callback(
+    Output(f"datasets-cumulative-download-svg", "data"),
+    Input("datasets-cumulative-download-svg-button", "n_clicks"),
+    State("datasets-cumulative-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_datasets_cumulative_svg(n_clicks, figure):
+    """Download the cumulative datasets chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "datasets_cumulative")
+
+
+@callback(
+    Output(f"datasets-sample-type-download-svg", "data"),
+    Input("datasets-sample-type-download-svg-button", "n_clicks"),
+    State("datasets-sample-type-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_datasets_sample_type_svg(n_clicks, figure):
+    """Download the datasets by sample type chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "datasets_by_sample_type")
+
+
+@callback(
+    Output(f"datasets-organism-download-svg", "data"),
+    Input("datasets-organism-download-svg-button", "n_clicks"),
+    State("datasets-organism-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_datasets_organism_svg(n_clicks, figure):
+    """Download the datasets by organism chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "datasets_by_organism") 
