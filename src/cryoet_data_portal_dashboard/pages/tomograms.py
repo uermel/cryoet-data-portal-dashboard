@@ -9,6 +9,7 @@ import random
 import dash
 from dash import State
 import plotly.graph_objects as go
+import os
 
 from cryoet_data_portal_dashboard.components import (
     create_card, 
@@ -19,7 +20,9 @@ from cryoet_data_portal_dashboard.components import (
     create_line_chart,
     create_bar_chart,
     create_auto_scrolling_image_gallery,
-    create_related_items_grid_gallery
+    create_related_items_grid_gallery,
+    generate_csv_download,
+    generate_svg_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_tomograms,
@@ -1235,4 +1238,79 @@ def reshuffle_tomograms_voxel_spacing_gallery(n_clicks, stored_items):
     for i in range(0, len(image_cards), grid_size):
         rows.append(dbc.Row(image_cards[i:i+grid_size], className="mb-3"))
     
-    return html.Div(rows, className="related-grid-gallery") 
+    return html.Div(rows, className="related-grid-gallery")
+
+# Callbacks for SVG downloads
+@callback(
+    Output(f"tomograms-added-download-svg", "data"),
+    Input("tomograms-added-download-svg-button", "n_clicks"),
+    State("tomograms-added-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_tomograms_added_svg(n_clicks, figure):
+    """Download the tomograms added chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "tomograms_added")
+
+
+@callback(
+    Output(f"tomograms-cumulative-download-svg", "data"),
+    Input("tomograms-cumulative-download-svg-button", "n_clicks"),
+    State("tomograms-cumulative-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_tomograms_cumulative_svg(n_clicks, figure):
+    """Download the cumulative tomograms chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "tomograms_cumulative")
+
+
+@callback(
+    Output(f"tomograms-recon-method-download-svg", "data"),
+    Input("tomograms-recon-method-download-svg-button", "n_clicks"),
+    State("tomograms-recon-method-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_tomograms_recon_method_svg(n_clicks, figure):
+    """Download the tomograms by reconstruction method chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "tomograms_by_recon_method")
+
+
+@callback(
+    Output(f"tomograms-proc-method-download-svg", "data"),
+    Input("tomograms-proc-method-download-svg-button", "n_clicks"),
+    State("tomograms-proc-method-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_tomograms_proc_method_svg(n_clicks, figure):
+    """Download the tomograms by processing method chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "tomograms_by_proc_method")
+
+
+@callback(
+    Output(f"tomograms-voxel-spacing-download-svg", "data"),
+    Input("tomograms-voxel-spacing-download-svg-button", "n_clicks"),
+    State("tomograms-voxel-spacing-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_tomograms_voxel_spacing_svg(n_clicks, figure):
+    """Download the tomograms by voxel spacing chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "tomograms_by_voxel_spacing") 

@@ -328,12 +328,12 @@ def get_runs_by_organism() -> pd.DataFrame:
     """Get counts of runs by organism name.
     
     Returns:
-        pd.DataFrame: DataFrame with counts of runs grouped by organism.
+        pd.DataFrame: DataFrame with counts of runs grouped by organism name and organism taxid.
     """
     df = fetch_runs_with_dataset_dates()
     if df.empty or 'organism_name' not in df.columns:
-        return pd.DataFrame(columns=['organism_name', 'count'])
-    return df.groupby('organism_name').size().reset_index(name='count').sort_values('count', ascending=False)
+        return pd.DataFrame(columns=['organism_name', 'organism_taxid', 'count'])
+    return df.groupby(['organism_name', 'organism_taxid']).size().reset_index(name='count').sort_values('count', ascending=False)
 
 
 def get_runs_with_annotations() -> pd.DataFrame:
@@ -586,7 +586,7 @@ def fetch_runs_with_dataset_dates() -> pd.DataFrame:
         
         # Get necessary columns from datasets
         # Include dates as well as sample_type and organism_name
-        needed_columns = ['id', 'deposition_date', 'release_date', 'sample_type', 'organism_name']
+        needed_columns = ['id', 'deposition_date', 'release_date', 'sample_type', 'organism_name', 'organism_taxid']
         datasets_info_df = datasets_df[
             [col for col in needed_columns if col in datasets_df.columns]
         ].copy()

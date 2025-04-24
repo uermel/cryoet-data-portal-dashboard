@@ -1,10 +1,11 @@
 """Annotations page for the dashboard."""
 import pandas as pd
-from dash import dcc, html, callback, Output, Input, dash_table, State
+from dash import dcc, html, callback, Output, Input, dash_table, State, no_update
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from datetime import datetime
 from dash.dependencies import Input, Output, State, ALL
+import os
 
 from cryoet_data_portal_dashboard.components import (
     create_card, 
@@ -13,7 +14,9 @@ from cryoet_data_portal_dashboard.components import (
     group_by_interval,
     calculate_cumulative,
     create_line_chart,
-    create_bar_chart
+    create_bar_chart,
+    generate_csv_download,
+    generate_svg_download
 )
 from cryoet_data_portal_dashboard.data_utils import (
     fetch_annotations,
@@ -366,4 +369,80 @@ def update_annotations_by_object(pathname, n_clicks):
         labels={"count": "Number of Annotations", "object_name": "Object Name"}
     )
     
-    return table, fig 
+    return table, fig
+
+
+# Callbacks for SVG downloads
+@callback(
+    Output(f"annotations-added-download-svg", "data"),
+    Input("annotations-added-download-svg-button", "n_clicks"),
+    State("annotations-added-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_annotations_added_svg(n_clicks, figure):
+    """Download the annotations added chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "annotations_added")
+
+
+@callback(
+    Output(f"annotations-cumulative-download-svg", "data"),
+    Input("annotations-cumulative-download-svg-button", "n_clicks"),
+    State("annotations-cumulative-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_annotations_cumulative_svg(n_clicks, figure):
+    """Download the cumulative annotations chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "annotations_cumulative")
+
+
+@callback(
+    Output(f"annotations-method-download-svg", "data"),
+    Input("annotations-method-download-svg-button", "n_clicks"),
+    State("annotations-method-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_annotations_method_svg(n_clicks, figure):
+    """Download the annotations by method chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "annotations_by_method")
+
+
+@callback(
+    Output(f"annotations-shape-download-svg", "data"),
+    Input("annotations-shape-download-svg-button", "n_clicks"),
+    State("annotations-shape-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_annotations_shape_svg(n_clicks, figure):
+    """Download the annotations by shape chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "annotations_by_shape")
+
+
+@callback(
+    Output(f"annotations-object-download-svg", "data"),
+    Input("annotations-object-download-svg-button", "n_clicks"),
+    State("annotations-object-plot", "figure"),
+    prevent_initial_call=True,
+)
+def download_annotations_object_svg(n_clicks, figure):
+    """Download the annotations by object chart as SVG"""
+    if n_clicks is None or not figure:
+        return no_update
+    
+    # Generate SVG download
+    return generate_svg_download(figure, "annotations_by_object") 
