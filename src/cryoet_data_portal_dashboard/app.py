@@ -145,8 +145,8 @@ def render_page_content(pathname):
 
 
 def main():
-    app.run_server(debug=True)
+    app.run(debug=True)
 
 
 if __name__ == "__main__":
-    main() 
+    main()
